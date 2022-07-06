@@ -51,10 +51,24 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
-    public boolean create(int userId) {
+    public Account findByUsername(String username) {
+        String sql = "SELECT account_id, a.user_id, balance" +
+                " FROM account as a" +
+                " JOIN tenmo_user as tu ON a.user_id = tu.user_id" +
+                " WHERE username = ?;";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, username);
+        if(results.next()) {
+            return mapRowToAccount(results);
+        }
+        //custom exception
+        return null;
+    }
+
+    @Override
+    public boolean create(Long userId) {
         String sql = "insert into account(user_id) values(?)";
         try {
-            jdbcTemplate.update(sql, userId);
+            jdbcTemplate.queryForObject(sql, Long.class, userId);
         } catch (DataAccessException e) {
             return false;
         }

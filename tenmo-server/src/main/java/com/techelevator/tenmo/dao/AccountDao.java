@@ -13,10 +13,14 @@ public interface AccountDao {
 
     Account findByUserId(int userId);
 
-    boolean create(int userId);
+    Account findByUsername(String username);
+
+    boolean create(Long userId);
 
     boolean update(int accountId, Account account);
 
     boolean delete(int accountId);
+
+
 
 }

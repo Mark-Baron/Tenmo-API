@@ -17,10 +17,11 @@ import java.util.List;
 public class JdbcUserDao implements UserDao {
 
     private JdbcTemplate jdbcTemplate;
-    private JdbcAccountDao jdbcAccountDao = new JdbcAccountDao(jdbcTemplate);
+    private AccountDao accountDao;
 
-    public JdbcUserDao(JdbcTemplate jdbcTemplate) {
+    public JdbcUserDao(JdbcTemplate jdbcTemplate, AccountDao accountDao) {
         this.jdbcTemplate = jdbcTemplate;
+        this.accountDao = accountDao;
     }
 
     @Override
@@ -75,11 +76,11 @@ public class JdbcUserDao implements UserDao {
         // create user
         String sql = "INSERT INTO tenmo_user (username, password_hash) VALUES (?, ?) RETURNING user_id";
         String password_hash = new BCryptPasswordEncoder().encode(password);
-        Integer newUserId;
+        Long newUserId;
         try {
-            newUserId = jdbcTemplate.queryForObject(sql, Integer.class, username, password_hash);
+            newUserId = jdbcTemplate.queryForObject(sql, Long.class, username, password_hash);
             // create new account associated with user, balance initially $1,000
-            jdbcAccountDao.create(newUserId);
+            accountDao.create(newUserId);
         } catch (DataAccessException e) {
             return false;
         }
