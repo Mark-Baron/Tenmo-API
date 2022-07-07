@@ -9,11 +9,11 @@ public interface AccountDao {
 
     List<Account> findAll();
 
+    Account findByUsername(String username);
+
     Account findByAccountId(int accountId);
 
     Account findByUserId(int userId);
-
-    Account findByUsername(String username);
 
     boolean create(Long userId);
 

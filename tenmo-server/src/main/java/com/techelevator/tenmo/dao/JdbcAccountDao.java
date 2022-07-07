@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.Exceptions.AccountNotFoundException;
 import com.techelevator.tenmo.model.Account;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -29,28 +30,6 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
-    public Account findByAccountId(int accountId) {
-        String sql = "select account_id, user_id, balance from account where account_id = ?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, accountId);
-        if(results.next()) {
-            return mapRowToAccount(results);
-        }
-        //custom exception
-        return null;
-    }
-
-    @Override
-    public Account findByUserId(int userId) {
-        String sql = "select account_id, user_id, balance from account where user_id = ?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
-        if(results.next()) {
-            return mapRowToAccount(results);
-        }
-        //custom exception
-        return null;
-    }
-
-    @Override
     public Account findByUsername(String username) {
         String sql = "SELECT account_id, a.user_id, balance" +
                 " FROM account as a" +
@@ -59,9 +38,32 @@ public class JdbcAccountDao implements AccountDao {
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, username);
         if(results.next()) {
             return mapRowToAccount(results);
+        } else {
+            throw new AccountNotFoundException("Invalid username");
         }
-        //custom exception
-        return null;
+    }
+
+
+    @Override
+    public Account findByAccountId(int accountId) {
+        String sql = "select account_id, user_id, balance from account where account_id = ?";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, accountId);
+        if(results.next()) {
+            return mapRowToAccount(results);
+        } else {
+            throw new AccountNotFoundException("Invalid accountId");
+        }
+    }
+
+    @Override
+    public Account findByUserId(int userId) {
+        String sql = "select account_id, user_id, balance from account where user_id = ?";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
+        if(results.next()) {
+            return mapRowToAccount(results);
+        } else {
+            throw new AccountNotFoundException("Invalid userId");
+        }
     }
 
     @Override

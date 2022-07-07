@@ -1,6 +1,7 @@
 package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.Exceptions.InvalidTransferException;
+import com.techelevator.tenmo.Exceptions.TransferNotFoundException;
 import com.techelevator.tenmo.model.Transfer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -34,30 +35,10 @@ public class JdbcTransferDao implements TransferDao{
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferId);
         if(results.next()) {
             return mapRowToTransfer(results);
+        } else {
+            throw new TransferNotFoundException("Invalid transferId");
         }
-        //custom exception
-        return null;
     }
-
-//    public Transfer findTransferByToUserId(int toUserId) {
-//        String sql = "select transfer_id, to_account, from_account, transfer_amount, transfer_state from transfer where to_account = ?";
-//        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, toUserId);
-//        if(results.next()) {
-//            return mapRowToTransfer(results);
-//        }
-//        //custom exception
-//        return null;
-//    }
-//
-//    public Transfer findTransferByFromUserId(int fromUserId) {
-//        String sql = "select transfer_id, to_account, from_account, transfer_amount, transfer_state from transfer where from_account = ?";
-//        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, fromUserId);
-//        if(results.next()) {
-//            return mapRowToTransfer(results);
-//        }
-//        //custom exception
-//        return null;
-//    }
 
     //#6
     public List<Transfer> findAllTransfersByUserId(int userId) {
@@ -73,6 +54,7 @@ public class JdbcTransferDao implements TransferDao{
         return transfers;
     }
 
+    //#5
     public boolean sendTransfer(Transfer transfer) {
         String sql = "insert into transfer(to_user, from_user, transfer_amount, transfer_status)" +
                 " values(?, ?, ?, 'Approved')";
@@ -81,15 +63,15 @@ public class JdbcTransferDao implements TransferDao{
         BigDecimal accountBalance = jdbcTemplate.queryForObject(sql2, BigDecimal.class, transfer.getFromUserId());
 
         if(transfer.getToUserId() == transfer.getFromUserId()) {
-            throw new InvalidTransferException("Unable to send money to yourself.");
+            throw new InvalidTransferException("Unable to send money to yourself");
         }
 
         else if(accountBalance.compareTo(transfer.getTransferAmount()) == -1) {
-            throw new InvalidTransferException("Unable to send more money than in account.");
+            throw new InvalidTransferException("Unable to send more money than in account");
         }
 
         else if(transfer.getTransferAmount().compareTo(new BigDecimal("0")) <= 0) {
-            throw new InvalidTransferException("Unable to send 0 or negative amount.");
+            throw new InvalidTransferException("Unable to send 0 or negative amount");
         }
 
         else {
