@@ -3,10 +3,10 @@ package com.techelevator.tenmo.Exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(value = HttpStatus.BAD_REQUEST)
-public class InvalidTransferException extends RuntimeException {
+@ResponseStatus(value = HttpStatus.UNAUTHORIZED)
+public class UnauthorizedUserException extends RuntimeException {
 
-    public InvalidTransferException(String message) {
+    public UnauthorizedUserException(String message) {
         super(message);
     }
 
