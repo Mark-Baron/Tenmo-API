@@ -1,6 +1,6 @@
 package com.techelevator.tenmo.dao;
 
-import com.techelevator.tenmo.model.Account;
+import com.techelevator.tenmo.Exceptions.InvalidTransferException;
 import com.techelevator.tenmo.model.Transfer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -20,7 +20,7 @@ public class JdbcTransferDao implements TransferDao{
     public List<Transfer> findAllTransfers() {
         List<Transfer> transfers = new ArrayList<>();
         String sql =
-                "select transfer_id, to_account, from_account, transfer_amount, transfer_state from transfer";
+                "select transfer_id, to_user, from_user, transfer_amount, transfer_status from transfer";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
         while(results.next()) {
             transfers.add(mapRowToTransfer(results));
@@ -30,7 +30,7 @@ public class JdbcTransferDao implements TransferDao{
 
     //#7
     public Transfer findTransferByTransferId(int transferId) {
-        String sql = "select transfer_id, to_account, from_account, transfer_amount, transfer_state from transfer where transfer_id = ?";
+        String sql = "select transfer_id, to_user, from_user, transfer_amount, transfer_status from transfer where transfer_id = ?";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferId);
         if(results.next()) {
             return mapRowToTransfer(results);
@@ -39,67 +39,73 @@ public class JdbcTransferDao implements TransferDao{
         return null;
     }
 
-    public Transfer findTransferByToAccountId(int toAccountId) {
-        String sql = "select transfer_id, to_account, from_account, transfer_amount, transfer_state from transfer where to_account = ?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, toAccountId);
-        if(results.next()) {
-            return mapRowToTransfer(results);
-        }
-        //custom exception
-        return null;
-    }
-
-    public Transfer findTransferByFromAccountId(int fromAccountId) {
-        String sql = "select transfer_id, to_account, from_account, transfer_amount, transfer_state from transfer where from_account = ?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, fromAccountId);
-        if(results.next()) {
-            return mapRowToTransfer(results);
-        }
-        //custom exception
-        return null;
-    }
+//    public Transfer findTransferByToUserId(int toUserId) {
+//        String sql = "select transfer_id, to_account, from_account, transfer_amount, transfer_state from transfer where to_account = ?";
+//        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, toUserId);
+//        if(results.next()) {
+//            return mapRowToTransfer(results);
+//        }
+//        //custom exception
+//        return null;
+//    }
+//
+//    public Transfer findTransferByFromUserId(int fromUserId) {
+//        String sql = "select transfer_id, to_account, from_account, transfer_amount, transfer_state from transfer where from_account = ?";
+//        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, fromUserId);
+//        if(results.next()) {
+//            return mapRowToTransfer(results);
+//        }
+//        //custom exception
+//        return null;
+//    }
 
     //#6
-    public List<Transfer> findAllTransfersByUserName(String username) {
+    public List<Transfer> findAllTransfersByUserId(int userId) {
         List<Transfer> transfers = new ArrayList<>();
-        //from transfers aka deposits
         String sql =
-                "select transfer_id, to_account, from_account, transfer_amount, transfer_state" +
+                "select transfer_id, to_user, from_user, transfer_amount, transfer_status" +
                 " from transfer as t" +
-                " join account as a on from_account = account_id" +
-                " join tenmo_user as tu on a.user_id = tu.user_id" +
-                " where username = ?;";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, username);
-        while(results.next()) {
-            transfers.add(mapRowToTransfer(results));
-        }
-        //to transfers aka withdraws
-        sql =
-                "select transfer_id, to_account, from_account, transfer_amount, transfer_state" +
-                        " from transfer as t" +
-                        " join account as a on to_account = account_id" +
-                        " join tenmo_user as tu on a.user_id = tu.user_id" +
-                        " where username = ?;";
-        results = jdbcTemplate.queryForRowSet(sql, username);
+                " where to_user = ? or from_user = ?;";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId, userId);
         while(results.next()) {
             transfers.add(mapRowToTransfer(results));
         }
         return transfers;
     }
 
-    public boolean create(Transfer transfer) {
-        String sql = "insert into transfer(to_account, from_account, transfer_amount)" +
+    public boolean sendTransfer(Transfer transfer) {
+        String sql = "insert into transfer(to_user, from_user, transfer_amount, transfer_status)" +
                 " values(?, ?, ?, 'Approved')";
-        return jdbcTemplate.update(sql, transfer.getToAccountId(), transfer.getFromAccountId(),
-                transfer.getTransferAmount()) == 1;
+
+        String sql2 = "select balance from account as a join transfer as t on a.user_id = t.from_user where = ?";
+        BigDecimal accountBalance = jdbcTemplate.queryForObject(sql2, BigDecimal.class, transfer.getFromUserId());
+
+        if(transfer.getToUserId() == transfer.getFromUserId()) {
+            throw new InvalidTransferException("Unable to send money to yourself.");
+        }
+
+        else if(accountBalance.compareTo(transfer.getTransferAmount()) == -1) {
+            throw new InvalidTransferException("Unable to send more money than in account.");
+        }
+
+        else if(transfer.getTransferAmount().compareTo(new BigDecimal("0")) <= 0) {
+            throw new InvalidTransferException("Unable to send 0 or negative amount.");
+        }
+
+        else {
+            return jdbcTemplate.update(sql, transfer.getToUserId(), transfer.getFromUserId(),
+                    transfer.getTransferAmount()) == 1;
+        }
+
     }
 
     private Transfer mapRowToTransfer(SqlRowSet sqlRowSet) {
         Transfer transfer = new Transfer();
-        transfer.setToAccountId(sqlRowSet.getInt("to_account"));
-        transfer.setFromAccountId(sqlRowSet.getInt("from_account"));
+        transfer.setTransferId(sqlRowSet.getInt("transfer_id"));
+        transfer.setToUserId(sqlRowSet.getInt("to_user"));
+        transfer.setFromUserId(sqlRowSet.getInt("from_user"));
         transfer.setTransferAmount(sqlRowSet.getBigDecimal("transfer_amount"));
-        transfer.setTransferStatus(sqlRowSet.getString("transfer_state"));
+        transfer.setTransferStatus(sqlRowSet.getString("transfer_status"));
         return transfer;
     }
 

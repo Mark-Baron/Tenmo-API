@@ -40,13 +40,13 @@ CREATE SEQUENCE	seq_transfer_id
 
 CREATE TABLE transfer (
 	transfer_id int NOT NULL DEFAULT nextval('seq_transfer_id') PRIMARY KEY,
-	to_account int NOT NULL,
-	from_account int NOT NULL,
+	to_user int NOT NULL,
+	from_user int NOT NULL,
 	transfer_amount int NOT NULL,
-	transfer_state varchar(15),
-	CONSTRAINT CK_transfer_state CHECK(transfer_state IN ('Pending', 'Approved')),
-	CONSTRAINT FK_transfer_to_account FOREIGN KEY(to_account) REFERENCES account(account_id),
-	CONSTRAINT FK_transfer_from_account FOREIGN KEY(from_account) REFERENCES account(account_id)
+	transfer_status varchar(15),
+	CONSTRAINT CK_transfer_status CHECK(transfer_status IN ('Pending', 'Approved')),
+	CONSTRAINT FK_transfer_to_user FOREIGN KEY(to_user) REFERENCES tenmo_user(user_id),
+	CONSTRAINT FK_transfer_from_user FOREIGN KEY(from_user) REFERENCES tenmo_user(user_id)
 );
 
 COMMIT;

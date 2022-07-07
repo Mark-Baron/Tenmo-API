@@ -26,7 +26,6 @@ public class TransactionController {
     @PostMapping(path="/users")
     public User addUser(@RequestBody User user){
         userDao.create(user.getUsername(), user.getPassword());
-        //accountDao.create(user.getId());
         return user;
     }
 
@@ -50,14 +49,24 @@ public class TransactionController {
         return accountDao.findByUsername(username);
     }
 
-    @PostMapping(path="/transfers")
-    public boolean makeTransfer(@RequestBody Transfer transfer) {
-        return transferDao.create(transfer);
+    @GetMapping (path="/transfers")
+    public List<Transfer> getAllTransfers() {
+        return transferDao.findAllTransfers();
     }
 
-    @GetMapping(path="/transfers/{username}")
-    public List<Transfer> listTransfers(@PathVariable String username) {
-        return transferDao.findAllTransfersByUserName(username);
+    @GetMapping(path="/transfers/{transferId}")
+    public Transfer getTransfer(@PathVariable int transferId) {
+        return transferDao.findTransferByTransferId(transferId);
+    }
+
+    @PostMapping(path="/transfers")
+    public boolean makeTransfer(@RequestBody Transfer transfer) {
+        return transferDao.sendTransfer(transfer);
+    }
+
+    @GetMapping(path="/users/{userId}/transfers")
+    public List<Transfer> listTransfers(@PathVariable int userId) {
+        return transferDao.findAllTransfersByUserId(userId);
     }
 
 }

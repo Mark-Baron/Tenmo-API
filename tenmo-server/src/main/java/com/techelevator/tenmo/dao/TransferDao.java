@@ -11,13 +11,13 @@ public interface TransferDao {
 
     Transfer findTransferByTransferId(int transferId);
 
-    Transfer findTransferByToAccountId(int toAccountId);
+//    Transfer findTransferByToUserId(int toUserId);
+//
+//    Transfer findTransferByFromUserId(int fromUserId);
 
-    Transfer findTransferByFromAccountId(int fromAccountId);
+    public List<Transfer> findAllTransfersByUserId(int userId);
 
-    public List<Transfer> findAllTransfersByUserName(String username);
-
-    boolean create(Transfer transfer);
+    boolean sendTransfer(Transfer transfer);
 
 
 
