@@ -77,7 +77,7 @@ public class JdbcTransferDao implements TransferDao{
         String sql = "insert into transfer(to_user, from_user, transfer_amount, transfer_status)" +
                 " values(?, ?, ?, 'Approved')";
 
-        String sql2 = "select balance from account as a join transfer as t on a.user_id = t.from_user where = ?";
+        String sql2 = "SELECT balance FROM account as a JOIN tenmo_user as tu ON tu.user_id = a.user_id WHERE a.user_id = ?;";
         BigDecimal accountBalance = jdbcTemplate.queryForObject(sql2, BigDecimal.class, transfer.getFromUserId());
 
         if(transfer.getToUserId() == transfer.getFromUserId()) {

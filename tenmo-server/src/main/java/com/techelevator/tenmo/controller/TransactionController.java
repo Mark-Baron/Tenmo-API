@@ -6,11 +6,13 @@ import com.techelevator.tenmo.dao.UserDao;
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.User;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@PreAuthorize("isAuthenticated()")
 public class TransactionController {
 
     private AccountDao accountDao;
@@ -61,7 +63,18 @@ public class TransactionController {
 
     @PostMapping(path="/transfers")
     public boolean makeTransfer(@RequestBody Transfer transfer) {
-        return transferDao.sendTransfer(transfer);
+        Account fromAccount = accountDao.findByUserId(transfer.getFromUserId());
+        fromAccount.setBalance(fromAccount.getBalance().subtract(transfer.getTransferAmount()));
+        Account toAccount = accountDao.findByUserId(transfer.getToUserId());
+        toAccount.setBalance(toAccount.getBalance().add(transfer.getTransferAmount()));
+        if(transferDao.sendTransfer(transfer)){
+            accountDao.update(fromAccount.getAccount_id(), fromAccount);
+            accountDao.update(toAccount.getAccount_id(), toAccount);
+            return true;
+        } else
+        {
+            return false;
+        }
     }
 
     @GetMapping(path="/users/{userId}/transfers")
