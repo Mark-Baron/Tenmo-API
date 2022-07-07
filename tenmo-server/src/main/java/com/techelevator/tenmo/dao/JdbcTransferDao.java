@@ -88,10 +88,10 @@ public class JdbcTransferDao implements TransferDao{
     }
 
     public boolean create(Transfer transfer) {
-        String sql = "insert into transfer(to_account, from_account, transfer_amount, transfer_state)" +
-                " values(?, ?, ?, ?)";
+        String sql = "insert into transfer(to_account, from_account, transfer_amount)" +
+                " values(?, ?, ?, 'Approved')";
         return jdbcTemplate.update(sql, transfer.getToAccountId(), transfer.getFromAccountId(),
-                transfer.getTransferAmount(), transfer.getTransferStatus()) == 1;
+                transfer.getTransferAmount()) == 1;
     }
 
     private Transfer mapRowToTransfer(SqlRowSet sqlRowSet) {

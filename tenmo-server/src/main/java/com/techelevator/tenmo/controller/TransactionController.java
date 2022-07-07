@@ -4,6 +4,7 @@ import com.techelevator.tenmo.dao.AccountDao;
 import com.techelevator.tenmo.dao.TransferDao;
 import com.techelevator.tenmo.dao.UserDao;
 import com.techelevator.tenmo.model.Account;
+import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.User;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +48,16 @@ public class TransactionController {
     @GetMapping(path="/accounts/{username}")
     public Account getAccount(@PathVariable String username){
         return accountDao.findByUsername(username);
+    }
+
+    @PostMapping(path="/transfers")
+    public boolean makeTransfer(@RequestBody Transfer transfer) {
+        return transferDao.create(transfer);
+    }
+
+    @GetMapping(path="/transfers/{username}")
+    public List<Transfer> listTransfers(@PathVariable String username) {
+        return transferDao.findAllTransfersByUserName(username);
     }
 
 }
