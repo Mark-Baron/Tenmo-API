@@ -31,10 +31,10 @@ public class JdbcAccountDao implements AccountDao {
 
     @Override
     public Account findByUsername(String username) {
-        String sql = "SELECT account_id, a.user_id, balance" +
-                " FROM account as a" +
-                " JOIN tenmo_user as tu ON a.user_id = tu.user_id" +
-                " WHERE username = ?;";
+        String sql = "select account_id, a.user_id, balance" +
+                " from account as a" +
+                " join tenmo_user as tu on a.user_id = tu.user_id" +
+                " where username = ?;";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, username);
         if(results.next()) {
             return mapRowToAccount(results);

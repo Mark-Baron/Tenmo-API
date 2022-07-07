@@ -17,7 +17,7 @@ public interface TransferDao {
 
     public List<Transfer> findAllTransfersByUserId(int userId);
 
-    boolean sendTransfer(Transfer transfer);
+    Transfer sendTransfer(Transfer transfer);
 
 
 

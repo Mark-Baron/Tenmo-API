@@ -34,19 +34,31 @@ public class TransferController {
         return transferDao.findAllTransfers();
     }
 
+    //#7
     @GetMapping(path="/transfers/{transferId}")
     public Transfer getTransfer(@PathVariable int transferId) {
         return transferDao.findTransferByTransferId(transferId);
     }
 
-    @GetMapping(path="/users/{userId}/transfers")
-    public List<Transfer> listTransfersByUserId(@PathVariable int userId) {
-        return transferDao.findAllTransfersByUserId(userId);
+    //#6
+    @GetMapping(path="/users/{ProvidedUserId}/transfers")
+    public List<Transfer> listTransfersByUserId(@PathVariable int ProvidedUserId, Principal principal) {
+        String userName = principal.getName();
+        Long ActualUserId = userDao.findByUsername(userName).getId();
+
+        if(ProvidedUserId == ActualUserId.intValue()) {
+            return transferDao.findAllTransfersByUserId(ProvidedUserId);
+
+            //Must be appropriate User to view transfers
+        } else {
+            throw new UnauthorizedUserException("Unauthorized to view transfers of this account");
+        }
     }
 
+    //#5
     @ResponseStatus(value = HttpStatus.CREATED)
     @PostMapping(path="/transfers")
-    public boolean sendTransfer(@Valid @RequestBody Transfer transfer, Principal principal) {
+    public Transfer sendTransfer(@Valid @RequestBody Transfer transfer, Principal principal) {
         int transferFromId = transfer.getFromUserId();
         int principalId = userDao.findIdByUsername(principal.getName());
 
@@ -56,13 +68,9 @@ public class TransferController {
             Account toAccount = accountDao.findByUserId(transfer.getToUserId());
             toAccount.setBalance(toAccount.getBalance().add(transfer.getTransferAmount()));
 
-            if(transferDao.sendTransfer(transfer)){
                 accountDao.update(fromAccount.getAccount_id(), fromAccount);
                 accountDao.update(toAccount.getAccount_id(), toAccount);
-                return true;
-            } else {
-                throw new InvalidTransferException("An error occurred");
-            }
+                return transferDao.sendTransfer(transfer);
 
             //Must be appropriate User to send money
         } else {

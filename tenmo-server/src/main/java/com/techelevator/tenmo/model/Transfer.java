@@ -13,7 +13,7 @@ public class Transfer {
     private int fromUserId;
     @Positive
     private BigDecimal transferAmount;
-    private String transferStatus;
+    private String transferStatus = "Approved";
 
     public int getTransferId() {
         return transferId;

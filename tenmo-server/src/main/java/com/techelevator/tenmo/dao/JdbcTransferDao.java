@@ -55,11 +55,11 @@ public class JdbcTransferDao implements TransferDao{
     }
 
     //#5
-    public boolean sendTransfer(Transfer transfer) {
+    public Transfer sendTransfer(Transfer transfer) {
         String sql = "insert into transfer(to_user, from_user, transfer_amount, transfer_status)" +
-                " values(?, ?, ?, 'Approved')";
+                " values(?, ?, ?, 'Approved') returning transfer_id";
 
-        String sql2 = "SELECT balance FROM account as a JOIN tenmo_user as tu ON tu.user_id = a.user_id WHERE a.user_id = ?;";
+        String sql2 = "select balance from account as a join tenmo_user as tu on tu.user_id = a.user_id where a.user_id = ?;";
         BigDecimal accountBalance = jdbcTemplate.queryForObject(sql2, BigDecimal.class, transfer.getFromUserId());
 
         if(transfer.getToUserId() == transfer.getFromUserId()) {
@@ -75,8 +75,10 @@ public class JdbcTransferDao implements TransferDao{
         }
 
         else {
-            return jdbcTemplate.update(sql, transfer.getToUserId(), transfer.getFromUserId(),
-                    transfer.getTransferAmount()) == 1;
+            int newId = jdbcTemplate.queryForObject(sql, Integer.class, transfer.getToUserId(), transfer.getFromUserId(),
+                    transfer.getTransferAmount());
+            transfer.setTransferId(newId);
+            return transfer;
         }
 
     }
