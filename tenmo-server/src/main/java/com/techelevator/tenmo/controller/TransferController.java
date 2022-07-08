@@ -35,8 +35,16 @@ public class TransferController {
 
     //#7
     @GetMapping(path="/transfers/{transferId}")
-    public Transfer getTransfer(@PathVariable int transferId) {
-        return transferDao.findTransferByTransferId(transferId);
+    public Transfer getTransfer(@PathVariable int transferId, Principal principal) {
+        String userName = principal.getName();
+        Long ActualUserId = userDao.findByUsername(userName).getId();
+        int fromUserId = transferDao.findTransferByTransferId(transferId).getFromUserId();
+        int toUserId = transferDao.findTransferByTransferId(transferId).getToUserId();
+        if(ActualUserId.intValue() == fromUserId || ActualUserId.intValue() == toUserId) {
+            return transferDao.findTransferByTransferId(transferId);
+        } else {
+            throw new UnauthorizedUserException("Unauthorized to view transfer");
+        }
     }
 
     //#6
