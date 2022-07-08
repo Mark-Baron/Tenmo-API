@@ -11,7 +11,8 @@ public class Transfer {
     private int toUserId;
     @NotNull
     private int fromUserId;
-    @Positive
+    //@Positive(message = "Unable to send 0 or negative amount")
+    //Removed validation because custom exception error message looks better in Postman
     private BigDecimal transferAmount;
     private String transferStatus = "Approved";
 

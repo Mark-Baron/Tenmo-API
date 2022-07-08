@@ -2,6 +2,7 @@ package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.Exceptions.InvalidTransferException;
 import com.techelevator.tenmo.Exceptions.TransferNotFoundException;
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -15,8 +16,12 @@ import java.util.List;
 public class JdbcTransferDao implements TransferDao{
 
     private JdbcTemplate jdbcTemplate;
+    private AccountDao accountDao;
 
-    public JdbcTransferDao(JdbcTemplate jdbcTemplate) {this.jdbcTemplate = jdbcTemplate;}
+    public JdbcTransferDao(JdbcTemplate jdbcTemplate, AccountDao accountDao) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.accountDao = accountDao;
+    }
 
     public List<Transfer> findAllTransfers() {
         List<Transfer> transfers = new ArrayList<>();
@@ -75,6 +80,12 @@ public class JdbcTransferDao implements TransferDao{
         }
 
         else {
+            Account fromAccount = accountDao.findByUserId(transfer.getFromUserId());
+            fromAccount.setBalance(fromAccount.getBalance().subtract(transfer.getTransferAmount()));
+            Account toAccount = accountDao.findByUserId(transfer.getToUserId());
+            toAccount.setBalance(toAccount.getBalance().add(transfer.getTransferAmount()));
+            accountDao.update(fromAccount.getAccount_id(), fromAccount);
+            accountDao.update(toAccount.getAccount_id(), toAccount);
             int newId = jdbcTemplate.queryForObject(sql, Integer.class, transfer.getToUserId(), transfer.getFromUserId(),
                     transfer.getTransferAmount());
             transfer.setTransferId(newId);

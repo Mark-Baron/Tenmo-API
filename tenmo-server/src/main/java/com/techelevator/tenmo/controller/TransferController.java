@@ -1,11 +1,9 @@
 package com.techelevator.tenmo.controller;
 
-import com.techelevator.tenmo.Exceptions.InvalidTransferException;
 import com.techelevator.tenmo.Exceptions.UnauthorizedUserException;
 import com.techelevator.tenmo.dao.AccountDao;
 import com.techelevator.tenmo.dao.TransferDao;
 import com.techelevator.tenmo.dao.UserDao;
-import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +27,7 @@ public class TransferController {
         this.userDao = userDao;
     }
 
+    //For test purposes
     @GetMapping (path="/transfers")
     public List<Transfer> getAllTransfers() {
         return transferDao.findAllTransfers();
@@ -63,13 +62,6 @@ public class TransferController {
         int principalId = userDao.findIdByUsername(principal.getName());
 
         if(transferFromId == principalId) {
-            Account fromAccount = accountDao.findByUserId(transfer.getFromUserId());
-            fromAccount.setBalance(fromAccount.getBalance().subtract(transfer.getTransferAmount()));
-            Account toAccount = accountDao.findByUserId(transfer.getToUserId());
-            toAccount.setBalance(toAccount.getBalance().add(transfer.getTransferAmount()));
-
-                accountDao.update(fromAccount.getAccount_id(), fromAccount);
-                accountDao.update(toAccount.getAccount_id(), toAccount);
                 return transferDao.sendTransfer(transfer);
 
             //Must be appropriate User to send money
