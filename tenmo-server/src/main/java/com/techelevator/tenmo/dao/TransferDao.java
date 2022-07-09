@@ -11,14 +11,12 @@ public interface TransferDao {
 
     Transfer findTransferByTransferId(int transferId);
 
-//    Transfer findTransferByToUserId(int toUserId);
-//
-//    Transfer findTransferByFromUserId(int fromUserId);
-
     public List<Transfer> findAllTransfersByUserId(int userId);
 
     Transfer sendTransfer(Transfer transfer);
 
+    Transfer requestTransfer(Transfer transfer);
 
 
+    void approveTransfer(Transfer transfer);
 }

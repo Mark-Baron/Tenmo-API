@@ -64,7 +64,7 @@ public class TransferController {
 
     //#5
     @ResponseStatus(value = HttpStatus.CREATED)
-    @PostMapping(path="/transfers")
+    @PostMapping(path="/transfers/send")
     public Transfer sendTransfer(@Valid @RequestBody Transfer transfer, Principal principal) {
         int transferFromId = transfer.getFromUserId();
         int principalId = userDao.findIdByUsername(principal.getName());
@@ -75,6 +75,40 @@ public class TransferController {
             //Must be appropriate User to send money
         } else {
             throw new UnauthorizedUserException("Unauthorized to send money from this account");
+        }
+    }
+
+    //#8
+    //Create request
+    @ResponseStatus(value = HttpStatus.CREATED)
+    @PostMapping(path="/transfers/request")
+    public Transfer requestTransfer(@Valid @RequestBody Transfer transfer, Principal principal) {
+        int transferToId = transfer.getToUserId();
+        int principalId = userDao.findIdByUsername(principal.getName());
+
+        if(transferToId == principalId) {
+            return transferDao.requestTransfer(transfer);
+
+            //Must be appropriate User to make requests for the deposited account
+        } else {
+            throw new UnauthorizedUserException("Unauthorized to make requests for this account");
+        }
+    }
+
+    //Approve request
+    @ResponseStatus(value = HttpStatus.ACCEPTED)
+    @PutMapping(path="/transfers/request/{transferId}/approve")
+    public void approveTransfer(@PathVariable int transferId, Principal principal) {
+        Transfer transfer = transferDao.findTransferByTransferId(transferId);
+        int transferFromId = transfer.getFromUserId();
+        int principalId = userDao.findIdByUsername(principal.getName());
+
+        if(transferFromId == principalId) {
+            transferDao.approveTransfer(transfer);
+
+            //Must be appropriate User to approve requests
+        } else {
+            throw new UnauthorizedUserException("Unauthorized to approve requests for this account");
         }
     }
 }

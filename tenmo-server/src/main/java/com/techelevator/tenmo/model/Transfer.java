@@ -1,7 +1,6 @@
 package com.techelevator.tenmo.model;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 
 public class Transfer {
@@ -13,8 +12,9 @@ public class Transfer {
     private int fromUserId;
     //@Positive(message = "Unable to send 0 or negative amount")
     //Removed validation because custom exception error message looks better in Postman
+    @NotNull
     private BigDecimal transferAmount;
-    private String transferStatus = "Approved";
+    private String transferStatus;
 
     public int getTransferId() {
         return transferId;

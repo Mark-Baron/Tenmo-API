@@ -68,7 +68,7 @@ public class JdbcTransferDao implements TransferDao{
         BigDecimal accountBalance = jdbcTemplate.queryForObject(sql2, BigDecimal.class, transfer.getFromUserId());
 
         if(transfer.getToUserId() == transfer.getFromUserId()) {
-            throw new InvalidTransferException("Unable to send money to yourself");
+            throw new InvalidTransferException("Unable to send money from and to the same account");
         }
 
         else if(accountBalance.compareTo(transfer.getTransferAmount()) == -1) {
@@ -80,18 +80,54 @@ public class JdbcTransferDao implements TransferDao{
         }
 
         else {
-            Account fromAccount = accountDao.findByUserId(transfer.getFromUserId());
-            fromAccount.setBalance(fromAccount.getBalance().subtract(transfer.getTransferAmount()));
-            Account toAccount = accountDao.findByUserId(transfer.getToUserId());
-            toAccount.setBalance(toAccount.getBalance().add(transfer.getTransferAmount()));
-            accountDao.update(fromAccount.getAccount_id(), fromAccount);
-            accountDao.update(toAccount.getAccount_id(), toAccount);
+            updateAccounts(transfer);
             int newId = jdbcTemplate.queryForObject(sql, Integer.class, transfer.getToUserId(), transfer.getFromUserId(),
                     transfer.getTransferAmount());
             transfer.setTransferId(newId);
+            transfer.setTransferStatus("Approved");
+            return transfer;
+        }
+    }
+
+    public Transfer requestTransfer(Transfer transfer) {
+        String sql = "insert into transfer(to_user, from_user, transfer_amount, transfer_status)" +
+                " values(?, ?, ?, 'Pending') returning transfer_id";
+
+        if(transfer.getToUserId() == transfer.getFromUserId()) {
+            throw new InvalidTransferException("Unable to request money from and to the same account");
+        }
+
+        else if(transfer.getTransferAmount().compareTo(new BigDecimal("0")) <= 0) {
+            throw new InvalidTransferException("Unable to request 0 or negative amount");
+        }
+
+        else {
+            int newId = jdbcTemplate.queryForObject(sql, Integer.class, transfer.getToUserId(), transfer.getFromUserId(),
+                    transfer.getTransferAmount());
+            transfer.setTransferId(newId);
+            transfer.setTransferStatus("Pending");
             return transfer;
         }
 
+    }
+
+    public void approveTransfer(Transfer transfer) {
+        String sql = "update transfer set transfer_status = 'Approved' where transfer_id = ?";
+        jdbcTemplate.update(sql, transfer.getTransferId());
+        if(transfer.getTransferAmount().compareTo(accountDao.findByUserId(transfer.getFromUserId()).getBalance()) <= 0) {
+            updateAccounts(transfer);
+        } else {
+            throw new InvalidTransferException("Cannot accept a request that is greater than account balance");
+        }
+    }
+
+    private void updateAccounts(Transfer transfer) {
+        Account fromAccount = accountDao.findByUserId(transfer.getFromUserId());
+        fromAccount.setBalance(fromAccount.getBalance().subtract(transfer.getTransferAmount()));
+        Account toAccount = accountDao.findByUserId(transfer.getToUserId());
+        toAccount.setBalance(toAccount.getBalance().add(transfer.getTransferAmount()));
+        accountDao.update(fromAccount.getAccount_id(), fromAccount);
+        accountDao.update(toAccount.getAccount_id(), toAccount);
     }
 
     private Transfer mapRowToTransfer(SqlRowSet sqlRowSet) {
