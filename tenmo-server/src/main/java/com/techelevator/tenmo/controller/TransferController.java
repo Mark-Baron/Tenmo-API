@@ -111,4 +111,21 @@ public class TransferController {
             throw new UnauthorizedUserException("Unauthorized to approve requests for this account");
         }
     }
+
+    //Reject request
+    @ResponseStatus(value = HttpStatus.OK)
+    @PutMapping(path="/transfers/request/{transferId}/reject")
+    public void rejectTransfer(@PathVariable int transferId, Principal principal) {
+        Transfer transfer = transferDao.findTransferByTransferId(transferId);
+        int transferFromId = transfer.getFromUserId();
+        int principalId = userDao.findIdByUsername(principal.getName());
+
+        if(transferFromId == principalId) {
+            transferDao.rejectTransfer(transfer);
+
+            //Must be appropriate User to reject requests
+        } else {
+            throw new UnauthorizedUserException("Unauthorized to reject requests for this account");
+        }
+    }
 }

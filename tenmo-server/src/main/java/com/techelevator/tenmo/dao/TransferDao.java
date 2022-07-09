@@ -17,6 +17,7 @@ public interface TransferDao {
 
     Transfer requestTransfer(Transfer transfer);
 
-
     void approveTransfer(Transfer transfer);
+
+    void rejectTransfer(Transfer transfer);
 }
