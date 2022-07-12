@@ -42,9 +42,9 @@ CREATE TABLE transfer (
 	transfer_id int NOT NULL DEFAULT nextval('seq_transfer_id') PRIMARY KEY,
 	to_user int NOT NULL,
 	from_user int NOT NULL,
-	transfer_amount int NOT NULL,
+	transfer_amount decimal(13,2) NOT NULL,
 	transfer_status varchar(15),
-	CONSTRAINT CK_transfer_status CHECK(transfer_status IN ('Pending', 'Approved')),
+	CONSTRAINT CK_transfer_status CHECK(transfer_status IN ('Pending', 'Approved', 'Rejected')),
 	CONSTRAINT FK_transfer_to_user FOREIGN KEY(to_user) REFERENCES tenmo_user(user_id),
 	CONSTRAINT FK_transfer_from_user FOREIGN KEY(from_user) REFERENCES tenmo_user(user_id)
 );
