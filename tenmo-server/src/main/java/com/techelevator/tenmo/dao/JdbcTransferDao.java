@@ -120,6 +120,8 @@ public class JdbcTransferDao implements TransferDao{
             } else {
                 throw new InvalidTransferException("Cannot accept a request that is greater than account balance");
             }
+        } else {
+            throw new InvalidTransferException("This transfer is no longer pending.");
         }
     }
 
@@ -127,6 +129,8 @@ public class JdbcTransferDao implements TransferDao{
         String sql = "update transfer set transfer_status = 'Rejected' where transfer_id = ?";
         if (transfer.getTransferStatus().equalsIgnoreCase("Pending")) {
             jdbcTemplate.update(sql, transfer.getTransferId());
+        } else {
+            throw new InvalidTransferException("This transfer is no longer pending.");
         }
     }
 
