@@ -113,9 +113,9 @@ public class JdbcTransferDao implements TransferDao{
 
     public void approveTransfer(Transfer transfer) {
         String sql = "update transfer set transfer_status = 'Approved' where transfer_id = ?";
-        jdbcTemplate.update(sql, transfer.getTransferId());
         if(transfer.getTransferStatus().equalsIgnoreCase("Pending")) {
             if(transfer.getTransferAmount().compareTo(accountDao.findByUserId(transfer.getFromUserId()).getBalance()) <= 0) {
+                jdbcTemplate.update(sql, transfer.getTransferId());
                 updateAccounts(transfer);
             } else {
                 throw new InvalidTransferException("Cannot accept a request that is greater than account balance");
